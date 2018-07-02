@@ -129,6 +129,30 @@ int bloom_add(struct bloom * bloom, const void * buffer, int len)
 }
 
 
+int bloom_merge(struct bloom * bloom, const struct bloom * other)
+{
+  int i;
+
+  if (bloom->ready != 1 || other->ready != 1) {
+    return -1;
+  }
+
+  if (bloom->entries != other->entries) {
+    return -2;
+  }
+
+  if (bloom->error != other->error) {
+    return -3;
+  }
+
+  for (i = 0; i < bloom->bytes; i++) {
+    bloom->bf[i] |= other->bf[i];
+  }
+
+  return 0;
+}
+
+
 void bloom_print(struct bloom * bloom)
 {
   printf("bloom at %p\n", (void *)bloom);

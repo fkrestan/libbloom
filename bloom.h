@@ -119,6 +119,28 @@ int bloom_add(struct bloom * bloom, const void * buffer, int len);
 
 
 /** ***************************************************************************
+ * Merge other filter into bloom filter.
+ * The return code indicates if the merge was successful. Only bloom is updated
+ * and other is not modified. Both bloom structures must have same size and
+ * error.
+ *
+ * Parameters:
+ * -----------
+ *     bloom  - Pointer to an allocated struct bloom modified by merge.
+ *     other  - Pointer to an allocated struct bloom not modified by merge.
+ *
+ * Return:
+ * -------
+ *     0 - merge success
+ *    -1 - bloom not initialized
+ *    -2 - bloom and other number  of entries differs
+ *    -3 - bloom and other error differs
+ *
+ */
+int bloom_merge(struct bloom * bloom, const struct bloom * other);
+
+
+/** ***************************************************************************
  * Print (to stdout) info about this bloom filter. Debugging aid.
  *
  */
