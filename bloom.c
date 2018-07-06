@@ -152,6 +152,81 @@ int bloom_merge(struct bloom * bloom, const struct bloom * other)
 }
 
 
+int bloom_serialize(const struct bloom * bloom, uint8_t ** buffer, int32_t * size)
+{
+  int32_t offset = 0;
+
+  int32_t entries = htonl(bloom->entries);
+  int32_t bytes = htonl(bloom->bytes);
+
+  if (bloom->ready != 1) {
+    return -1;
+  }
+
+  *size = sizeof(bloom->entries) + sizeof(bloom->error) + sizeof(bloom->bytes) + bloom->bytes;
+  *buffer = (uint8_t *) calloc(*size, sizeof(uint8_t));
+
+  memcpy((*buffer) + offset, &entries, sizeof(entries));
+  offset += sizeof(entries);
+
+  memcpy((*buffer) + offset, &(bloom->error), sizeof(bloom->error));
+  offset += sizeof(bloom->error);
+
+  memcpy((*buffer) + offset, &bytes, sizeof(bytes));
+  offset += sizeof(bytes);
+
+  memcpy((*buffer) + offset, bloom->bf, bloom->bytes * sizeof(uint8_t));
+
+  return 0;
+}
+
+
+int bloom_deserialize(struct bloom * bloom, const uint8_t * buffer, int32_t size)
+{
+  int32_t offset = 0;
+  int32_t entries, entries_n;
+  double error;
+  int32_t bytes, bytes_n;
+
+  if (size < sizeof(entries) + sizeof(error) + sizeof(bytes)) {
+    return -2;
+  }
+
+  memcpy(&entries_n, buffer + offset, sizeof(entries));
+  entries = ntohl(entries_n);
+  offset += sizeof(entries);
+
+  memcpy(&error, buffer + offset, sizeof(error));
+  offset += sizeof(error);
+
+  memcpy(&bytes_n, buffer + offset, sizeof(bytes));
+  bytes = ntohl(bytes_n);
+  offset += sizeof(bytes);
+
+  if (size != sizeof(entries) + sizeof(error) + sizeof(bytes) + bytes) {
+    return -2;
+  }
+
+  bloom_free(bloom);
+  bloom_init(bloom, entries, error);
+
+  if (bloom->bytes != bytes) {
+    return -2;
+  }
+
+  memcpy(bloom->bf, buffer + offset, bytes * sizeof(uint8_t));
+
+  return 0;
+}
+
+
+void bloom_free_serialized_buffer(uint8_t ** buffer)
+{
+  free(*buffer);
+  *buffer = NULL;
+}
+
+
 void bloom_print(struct bloom * bloom)
 {
   printf("bloom at %p\n", (void *)bloom);

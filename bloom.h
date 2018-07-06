@@ -142,6 +142,59 @@ int bloom_merge(struct bloom * bloom, const struct bloom * other);
 
 
 /** ***************************************************************************
+ * Serialize bloom filter to a buffer.
+ * Allocates and serializes bloom struct to a buffer. The buffer pointer is set
+ * to the memory with serialized data. The size pointer is set to the buffer
+ * size. Use "bloom_deserialize" for deserialization.
+ *
+ * Parameters:
+ * -----------
+ *     bloom  - Pointer to an allocated bloom struct.
+ *     buffer - Pointer to a buffer array.
+ *     size   - Pointer to a int.
+ *
+ * Return:
+ * -------
+ *     0 - success
+ *    -1 - bloom not initialized
+ *    -2 - serialization failed
+ *
+ */
+int bloom_serialize(const struct bloom * bloom, uint8_t ** buffer, int32_t * size);
+
+
+/** ***************************************************************************
+ * Deserialize bloom filter from a buffer.
+ * The bloom struct is initialized from provided buffer. Use "bloom_serialize"
+ * for serialization.
+ *
+ * Parameters:
+ * -----------
+ *     bloom  - Pointer to a bloom struct.
+ *     buffer - Pointer to a buffer array.
+ *     size   - Size of the buffer array.
+ *
+ * Return:
+ * -------
+ *     0 - success
+ *    -2 - deserialization failed
+ *
+ */
+int bloom_deserialize(struct bloom * bloom, const uint8_t * buffer, int32_t size);
+
+
+/** ***************************************************************************
+ * Frees buffer used for serialization.
+ *
+ * Parameters:
+ * -----------
+ *     buffer - Pointer to a buffer array.
+ *
+ */
+void bloom_free_serialized_buffer(uint8_t ** buffer);
+
+
+/** ***************************************************************************
  * Print (to stdout) info about this bloom filter. Debugging aid.
  *
  */
