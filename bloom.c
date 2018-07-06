@@ -9,6 +9,7 @@
  * Refer to bloom.h for documentation on the public interfaces.
  */
 
+#include <arpa/inet.h>
 #include <assert.h>
 #include <fcntl.h>
 #include <math.h>
@@ -26,12 +27,11 @@
 #define MAKESTRING(n) STRING(n)
 #define STRING(n) #n
 
-
-inline static int test_bit_set_bit(unsigned char * buf,
+inline static int test_bit_set_bit(uint8_t * buf,
                                    unsigned int x, int set_bit)
 {
   unsigned int byte = x >> 3;
-  unsigned char c = buf[byte];        // expensive memory access
+  uint8_t c = buf[byte];        // expensive memory access
   unsigned int mask = 1 << (x % 8);
 
   if (c & mask) {
@@ -46,7 +46,7 @@ inline static int test_bit_set_bit(unsigned char * buf,
 
 
 static int bloom_check_add(struct bloom * bloom,
-                           const void * buffer, int len, int add)
+                           const void * buffer, int32_t len, int add)
 {
   if (bloom->ready == 0) {
     printf("bloom at %p not initialized!\n", (void *)bloom);
@@ -73,15 +73,14 @@ static int bloom_check_add(struct bloom * bloom,
   return 0;
 }
 
-
-int bloom_init_size(struct bloom * bloom, int entries, double error,
-                    unsigned int cache_size)
+int bloom_init_size(struct bloom * bloom, int32_t entries, double error,
+                    int32_t cache_size)
 {
   return bloom_init(bloom, entries, error);
 }
 
 
-int bloom_init(struct bloom * bloom, int entries, double error)
+int bloom_init(struct bloom * bloom, int32_t entries, double error)
 {
   bloom->ready = 0;
 
@@ -97,7 +96,7 @@ int bloom_init(struct bloom * bloom, int entries, double error)
   bloom->bpe = -(num / denom);
 
   double dentries = (double)entries;
-  bloom->bits = (int)(dentries * bloom->bpe);
+  bloom->bits = (int32_t)(dentries * bloom->bpe);
 
   if (bloom->bits % 8) {
     bloom->bytes = (bloom->bits / 8) + 1;
@@ -105,9 +104,9 @@ int bloom_init(struct bloom * bloom, int entries, double error)
     bloom->bytes = bloom->bits / 8;
   }
 
-  bloom->hashes = (int)ceil(0.693147180559945 * bloom->bpe);  // ln(2)
+  bloom->hashes = (int32_t)ceil(0.693147180559945 * bloom->bpe);  // ln(2)
 
-  bloom->bf = (unsigned char *)calloc(bloom->bytes, sizeof(unsigned char));
+  bloom->bf = (uint8_t *)calloc(bloom->bytes, sizeof(uint8_t));
   if (bloom->bf == NULL) {
     return 1;
   }
@@ -117,13 +116,13 @@ int bloom_init(struct bloom * bloom, int entries, double error)
 }
 
 
-int bloom_check(struct bloom * bloom, const void * buffer, int len)
+int bloom_check(struct bloom * bloom, const void * buffer, int32_t len)
 {
   return bloom_check_add(bloom, buffer, len, 0);
 }
 
 
-int bloom_add(struct bloom * bloom, const void * buffer, int len)
+int bloom_add(struct bloom * bloom, const void * buffer, int32_t len)
 {
   return bloom_check_add(bloom, buffer, len, 1);
 }
@@ -131,7 +130,7 @@ int bloom_add(struct bloom * bloom, const void * buffer, int len)
 
 int bloom_merge(struct bloom * bloom, const struct bloom * other)
 {
-  int i;
+  int32_t i;
 
   if (bloom->ready != 1 || other->ready != 1) {
     return -1;

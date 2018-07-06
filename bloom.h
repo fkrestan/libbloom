@@ -12,6 +12,7 @@
 extern "C" {
 #endif
 
+#include <stdint.h>
 
 /** ***************************************************************************
  * Structure to keep track of one bloom filter.  Caller needs to
@@ -24,17 +25,17 @@ struct bloom
   // These fields are part of the public interface of this structure.
   // Client code may read these values if desired. Client code MUST NOT
   // modify any of these.
-  int entries;
+  int32_t entries;
   double error;
-  int bits;
-  int bytes;
-  int hashes;
+  int32_t bits;
+  int32_t bytes;
+  int32_t hashes;
 
   // Fields below are private to the implementation. These may go away or
   // change incompatibly at any moment. Client code MUST NOT access or rely
   // on these.
   double bpe;
-  unsigned char * bf;
+  uint8_t * bf;
   int ready;
 };
 
@@ -66,15 +67,15 @@ struct bloom
  *     1 - on failure
  *
  */
-int bloom_init(struct bloom * bloom, int entries, double error);
+int bloom_init(struct bloom * bloom, int32_t entries, double error);
 
 
 /** ***************************************************************************
  * Deprecated, use bloom_init()
  *
  */
-int bloom_init_size(struct bloom * bloom, int entries, double error,
-                    unsigned int cache_size);
+int bloom_init_size(struct bloom * bloom, int32_t entries, double error,
+                    int32_t cache_size);
 
 
 /** ***************************************************************************
@@ -94,7 +95,7 @@ int bloom_init_size(struct bloom * bloom, int entries, double error,
  *    -1 - bloom not initialized
  *
  */
-int bloom_check(struct bloom * bloom, const void * buffer, int len);
+int bloom_check(struct bloom * bloom, const void * buffer, int32_t len);
 
 
 /** ***************************************************************************
@@ -115,7 +116,7 @@ int bloom_check(struct bloom * bloom, const void * buffer, int len);
  *    -1 - bloom not initialized
  *
  */
-int bloom_add(struct bloom * bloom, const void * buffer, int len);
+int bloom_add(struct bloom * bloom, const void * buffer, int32_t len);
 
 
 /** ***************************************************************************
