@@ -34,6 +34,8 @@ int main(int argc, char **argv)
 {
   struct bloom bloom;
   struct bloom bloom2;
+  uint8_t* serialization_buffer;
+  int32_t serialization_buffer_size;
 
   printf("----- Basic tests with static library -----\n");
   assert(bloom_init(&bloom, 0, 1.0) == 1);
@@ -91,6 +93,33 @@ int main(int argc, char **argv)
   bloom_print(&bloom);
   bloom_print(&bloom2);
 
+  bloom_free(&bloom);
+  bloom_free(&bloom2);
+
+  printf("----- Basic tests with static library - serialization -----\n");
+
+  assert(bloom_serialize(&bloom, &serialization_buffer, &serialization_buffer_size) == -1);
+
+  assert(bloom_init(&bloom, 1002, 0.1) == 0);
+  assert(bloom.ready == 1);
+  assert(bloom_serialize(&bloom, &serialization_buffer, &serialization_buffer_size) == 0);
+  assert(serialization_buffer_size == 617);
+
+  assert(bloom_deserialize(&bloom2, serialization_buffer, 5) == -2);
+  assert(bloom_deserialize(&bloom2, serialization_buffer, 616) == -2);
+
+  assert(bloom_deserialize(&bloom2, serialization_buffer, serialization_buffer_size) == 0);
+  bloom_print(&bloom);
+  bloom_print(&bloom2);
+  assert(bloom.entries == bloom2.entries);
+  assert(bloom.error == bloom2.error);
+  assert(bloom.bits == bloom2.bits);
+  assert(bloom.bytes == bloom2.bytes);
+  assert(bloom.hashes == bloom2.hashes);
+  assert(bloom.bpe == bloom2.bpe);
+
+  bloom_free_serialized_buffer(&serialization_buffer);
+  assert(serialization_buffer == NULL);
   bloom_free(&bloom);
   bloom_free(&bloom2);
 
