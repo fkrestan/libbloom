@@ -224,6 +224,72 @@ void bloom_free_serialized_buffer(uint8_t ** buffer)
 }
 
 
+int bloom_file_write(const struct bloom * bloom, const char * filename)
+{
+  uint8_t* buffer;
+  int32_t buffer_size;
+  FILE* fp;
+
+  fp = fopen(filename, "w");
+  if (fp == NULL) {
+    return -1;
+  }
+
+  if (bloom_serialize(bloom, &buffer, &buffer_size) != 0) {
+    fclose(fp);
+    return -3;
+  }
+
+  if (fwrite(buffer, sizeof(uint8_t), buffer_size, fp) != buffer_size) {
+    fclose(fp);
+    return -2;
+  }
+
+  fclose(fp);
+  bloom_free_serialized_buffer(&buffer);
+
+  return 0;
+}
+
+
+int bloom_file_read(struct bloom * bloom, const char * filename)
+{
+  uint8_t* buffer;
+  int32_t buffer_size, buffer_size_n;
+  FILE* fp;
+
+  fp = fopen(filename, "r");
+  if (fp == NULL) {
+    return -1;
+  }
+
+  if (fread(&buffer_size_n, sizeof(int32_t), 1, fp) != 1) {
+    fclose(fp);
+    return -2;
+  }
+  rewind(fp);
+  buffer_size = ntohl(buffer_size_n);
+  buffer = (uint8_t *) malloc(buffer_size * sizeof(uint8_t));
+
+  if (fread(buffer, sizeof(uint8_t), buffer_size, fp) != buffer_size) {
+    fclose(fp);
+    free(buffer);
+    return -2;
+  }
+
+  if (bloom_deserialize(bloom, buffer) != 0) {
+    fclose(fp);
+    free(buffer);
+    return -3;
+  }
+
+  fclose(fp);
+  free(buffer);
+
+  return 0;
+}
+
+
 void bloom_print(struct bloom * bloom)
 {
   printf("bloom at %p\n", (void *)bloom);

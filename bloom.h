@@ -197,6 +197,46 @@ void bloom_free_serialized_buffer(uint8_t ** buffer);
 
 
 /** ***************************************************************************
+ * Write bloom filter to a file in its serialied form.
+ * New file is created if it does not exist. See "bloom_file_read".
+ *
+ * Parameters:
+ * -----------
+ *     bloom    - Pointer to a initialized bloom struct.
+ *     filename - Path to which the filter is written.
+ *
+ * Return:
+ * -------
+ *     0 - success
+ *    -1 - could not open (or create) file for writing
+ *    -2 - could not write to file
+ *    -3 - serialization failed
+ *
+ */
+int bloom_file_write(const struct bloom * bloom, const char * filename);
+
+
+/** ***************************************************************************
+ * Write bloom filter to a file in its serialied form.
+ * New file is created if it does not exist. See "bloom_file_read".
+ *
+ * Parameters:
+ * -----------
+ *     bloom    - Pointer to a initialized bloom struct.
+ *     filename - Path to which the filter is written.
+ *
+ * Return:
+ * -------
+ *     0 - success
+ *    -1 - could not open file for reading
+ *    -2 - could not read from file or file too short
+ *    -3 - deserialization failed
+ *
+ */
+int bloom_file_read(struct bloom * bloom, const char * filename);
+
+
+/** ***************************************************************************
  * Print (to stdout) info about this bloom filter. Debugging aid.
  *
  */
