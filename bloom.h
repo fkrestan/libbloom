@@ -147,6 +147,9 @@ int bloom_merge(struct bloom * bloom, const struct bloom * other);
  * to the memory with serialized data. The size pointer is set to the buffer
  * size. Use "bloom_deserialize" for deserialization.
  *
+ * Serialized format:
+ * |size := 4B(BE)|entries := 4B(BE)|error := 8B(IEE754)|bf := size-(4+4+8)*1B|
+ *
  * Parameters:
  * -----------
  *     bloom  - Pointer to an allocated bloom struct.
@@ -172,7 +175,6 @@ int bloom_serialize(const struct bloom * bloom, uint8_t ** buffer, int32_t * siz
  * -----------
  *     bloom  - Pointer to a bloom struct.
  *     buffer - Pointer to a buffer array.
- *     size   - Size of the buffer array.
  *
  * Return:
  * -------
@@ -180,7 +182,7 @@ int bloom_serialize(const struct bloom * bloom, uint8_t ** buffer, int32_t * siz
  *    -2 - deserialization failed
  *
  */
-int bloom_deserialize(struct bloom * bloom, const uint8_t * buffer, int32_t size);
+int bloom_deserialize(struct bloom * bloom, const uint8_t * buffer);
 
 
 /** ***************************************************************************

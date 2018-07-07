@@ -5,6 +5,7 @@
  *  This file is under BSD license. See LICENSE file.
  */
 
+#include <arpa/inet.h>
 #include <assert.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -36,6 +37,8 @@ int main(int argc, char **argv)
   struct bloom bloom2;
   uint8_t* serialization_buffer;
   int32_t serialization_buffer_size;
+  int32_t bad_size1 = htonl(5);
+  int32_t bad_size2 = htonl(616);
 
   printf("----- Basic tests with static library -----\n");
   assert(bloom_init(&bloom, 0, 1.0) == 1);
@@ -102,13 +105,19 @@ int main(int argc, char **argv)
 
   assert(bloom_init(&bloom, 1002, 0.1) == 0);
   assert(bloom.ready == 1);
+
   assert(bloom_serialize(&bloom, &serialization_buffer, &serialization_buffer_size) == 0);
   assert(serialization_buffer_size == 617);
+  memcpy(serialization_buffer, &bad_size1, sizeof(int32_t));
+  assert(bloom_deserialize(&bloom2, serialization_buffer) == -2);
+  memcpy(serialization_buffer, &bad_size2, sizeof(int32_t));
+  assert(bloom_deserialize(&bloom2, serialization_buffer) == -2);
+  memcpy(serialization_buffer, &serialization_buffer_size, sizeof(int32_t));
+  bloom_free_serialized_buffer(&serialization_buffer);
 
-  assert(bloom_deserialize(&bloom2, serialization_buffer, 5) == -2);
-  assert(bloom_deserialize(&bloom2, serialization_buffer, 616) == -2);
-
-  assert(bloom_deserialize(&bloom2, serialization_buffer, serialization_buffer_size) == 0);
+  assert(bloom_serialize(&bloom, &serialization_buffer, &serialization_buffer_size) == 0);
+  assert(serialization_buffer_size == 617);
+  assert(bloom_deserialize(&bloom2, serialization_buffer) == 0);
   bloom_print(&bloom);
   bloom_print(&bloom2);
   assert(bloom.entries == bloom2.entries);
@@ -125,3 +134,4 @@ int main(int argc, char **argv)
 
   printf("----- DONE Basic tests with static library -----\n");
 }
+
