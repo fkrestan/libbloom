@@ -132,6 +132,26 @@ int main(int argc, char **argv)
   bloom_free(&bloom);
   bloom_free(&bloom2);
 
+  printf("----- Basic tests with static library - serialization to file -----\n");
+
+  assert(bloom_file_write(&bloom, "/tmp/test.bloom") == -3);
+  assert(bloom_file_read(&bloom, "/dev/zero") == -3);
+  assert(bloom_file_read(&bloom, "/tmp/test_nonexistent.bloom") == -1);
+
+  assert(bloom_init(&bloom, 1002, 0.1) == 0);
+  assert(bloom.ready == 1);
+  assert(bloom_file_write(&bloom, "/tmp/test.bloom") == 0);
+  assert(bloom_file_read(&bloom2, "/tmp/test.bloom") == 0);
+  assert(bloom2.ready == 1);
+  assert(bloom.entries == bloom2.entries);
+  assert(bloom.error == bloom2.error);
+  assert(bloom.bits == bloom2.bits);
+  assert(bloom.bytes == bloom2.bytes);
+  assert(bloom.hashes == bloom2.hashes);
+  assert(bloom.bpe == bloom2.bpe);
+  bloom_free(&bloom);
+  bloom_free(&bloom2);
+
   printf("----- DONE Basic tests with static library -----\n");
 }
 
